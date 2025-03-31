@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: darkgray;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .root {
+        width: 256px;
+        height: 256px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="root">
+      <canvas id="pixelCanvas" width="256" height="256"></canvas>
+    </div>
+    <script>
+      window.content = {
+        type: "Frontend React Developer", // #70d6ff
+        name: "Lyulyushin Gordey", // #ff70a6
+        age: "27", // #ff0a54
+        skills: "HTML, CSS, JavaScript, Jquery, PHP, Canvas, Effector, Node.js.", // #ff9770
+        date: "31.03.2025", // #bfd200
+      };
+
+      const wContent = window.content;
+
+      const colors = {
+        type: "#70d6ff",
+        name: "#ff70a6",
+        age: "#ff0a54",
+        skills: "#ff9770",
+        date: "#bfd200",
+        checksum: "#000000",
+      };
+
+      const lengths = {
+        type: 32,
+        name: 16,
+        age: 2,
+        skills: 64,
+        date: 10,
+      };
+
+      const pixelSize = 8;
+      const canvas = document.getElementById("pixelCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const binaryMatrix = Array.from({ length: 31 }, () => Array(32).fill(0));
+
+      function toBinary(str, length) {
+        let binaryString = "";
+        for (let i = 0; i < str.length; i++) {
+          let charCode = str.charCodeAt(i);
+          let binaryChar = charCode.toString(2).padStart(8, "0");
+          binaryString += binaryChar;
+        }
+        if (binaryString.length < length) {
+          binaryString = binaryString.padEnd(length, "0");
+        }
+        return binaryString;
+      }
+
+      function drawPixel(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+      }
+
+      function createImage() {
+        let x = 0;
+        let y = 0;
+
+        for (let item in wContent) {
+          let content = wContent[item];
+          let color = colors[item];
+          let length = lengths[item] * pixelSize;
+
+          let binaryData = toBinary(content, length);
+
+          for (let i = 0; i < binaryData.length; i++) {
+            let bit = binaryData[i];
+            let colorToDraw = bit === "1" ? color : "#FFFFFF";
+
+            drawPixel(x, y, colorToDraw);
+
+            if (y < 31) {
+              binaryMatrix[y][x] = bit === "1" ? 1 : 0;
+            }
+
+            x++;
+            if (x >= 32) {
+              x = 0;
+              y++;
+            }
+          }
+        }
+      }
+
+      function calculateChecksum() {
+        let checksumRow = [];
+
+        for (let col = 0; col < 32; col++) {
+          let sum = 0;
+          for (let row = 0; row < 31; row++) {
+            sum += binaryMatrix[row][col];
+          }
+          checksumRow[col] = sum % 2 === 0 ? 1 : 0;
+        }
+
+        return checksumRow;
+      }
+
+      function drawChecksum(checksum) {
+        for (let x = 0; x < 32; x++) {
+          let color = checksum[x] === 1 ? colors.checksum : "#FFFFFF";
+          drawPixel(x, 31, color);
+        }
+      }
+
+      createImage();
+      const checksum = calculateChecksum();
+      drawChecksum(checksum);
+    </script>
+  </body>
+</html>
